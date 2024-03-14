@@ -14,7 +14,7 @@ struct ethhdr {
 
 // IP Header Structure
 struct iphdr {
-    uint8_t ip_ver_hl;          // Version and Header Length
+    uint8_t ip_ver_hl;      // Version and Header Length
     uint8_t ip_tos;         // Type of Service
     uint16_t ip_len;        // Total Length
     uint16_t ip_id;         // Identification
@@ -165,34 +165,39 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
 
     struct ethhdr *eth_header = (struct ethhdr *)packet;
     struct iphdr *ip_header = (struct iphdr *)(packet + 14);
-    struct tcphdr *tcp_header = (struct tcphdr *)(packet + 14 + ip_header->ip_hl * 4);
-    struct udphdr *udp_header = (struct udphdr *)(packet + ip_header -> ip_hl *4 + sizeof(eth_header));
-    // add ...
-
+    struct tcphdr *tcp_header = (struct tcphdr *)(packet + 34);
+    struct udphdr *udp_header = (struct udphdr *)(packet + 34);
     
-    printf("ip header: %u\n", ip_header->ip_p);
-    fprintf(logFile, "ip header: %u\n", ip_header->ip_p);
 
 
     // ETHERNET
     printf("\n=============ETHHDR===============\n");
+    printf("ethhdr src: ");
     for(int i =0 ; i<6 ; i++){
-        printf("%02X ", eth_header->des[i]);
         printf("%02X ", eth_header->src[i]);
     }
-    // printf("%d\n", ntohs(eth_header->ptype)); // ntohs :  big endian -> little endian
-    printf("%d\n", eth_header->ptype);
+    printf("\nethhdr dst: ");
+    for(int i =0 ; i<6 ; i++){
+        printf("%02X ", eth_header->des[i]);
+    }
+    printf("\n%d\n", ntohs(eth_header->ptype));
     printf("\n==================================\n");
     printf("\n\n");
 
-    fprintf(logFile,"\n=============ETHHDR===============\n");
+    fprintf(logFile, "\n=============ETHHDR===============\n");
+    fprintf(logFile, "ethhdr src: ");
     for(int i =0 ; i<6 ; i++){
-        fprintf(logFile,"%02X ", eth_header->des[i]);
-        fprintf(logFile,"%02X ", eth_header->src[i]);
+        fprintf(logFile, "%02X ", eth_header->src[i]);
     }
-    fprintf(logFile,"%d\n", eth_header->ptype);
-    fprintf(logFile,"\n==================================\n");
-    fprintf(logFile,"\n\n");
+    fprintf(logFile, "\nethhdr dst: ");
+    for(int i =0 ; i<6 ; i++){
+        fprintf(logFile, "%02X ", eth_header->des[i]);
+    }
+    fprintf(logFile, "\n%d\n", ntohs(eth_header->ptype));
+    fprintf(logFile, "\n==================================\n");
+    fprintf(logFile, "\n\n");
+
+    
 
 
     // IP
@@ -219,15 +224,13 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
     fprintf(logFile,"ip_id: %u\n", ip_header->ip_id);
     fprintf(logFile,"ip_off: %u\n", ip_header->ip_off);
     fprintf(logFile,"ip_ttl: %u\n", ip_header->ip_ttl);
-    fprintf(logFile,"ip_p: %u\n", ip_header->ip_p);
+    fprintf(logFile,"ip_p: %s\n", getIPHdrProtocol(ip_header->ip_p));
     fprintf(logFile,"ip_sum: %u\n", ip_header->ip_sum);
     fprintf(logFile,"ip_src: %s\n", getIpFormat(ip_header->ip_src));
     fprintf(logFile,"ip_dst: %s\n", getIpFormat(ip_header->ip_dst));
     fprintf(logFile,"\n==================================\n");
     fprintf(logFile,"\n\n");
 
-
-if(ip_header->ip_p)
 
     // TCP
     printf("\n=============TCPHDR===============\n");
@@ -258,21 +261,22 @@ if(ip_header->ip_p)
 
 
     // UDP 
-    printf("\n=============UDPHDR===============\n");
-    printf("uh_sport: %u\n", udp_header->uh_sport);
-    printf("uh_dport: %u\n", udp_header->uh_dport);
-    printf("uh_len: %u\n", udp_header->uh_len);
-    printf("uh_sum: %u\n", udp_header->uh_sum);
-    printf("\n==================================\n");
-    printf("\n\n");
+    // printf("\n=============UDPHDR===============\n");
+    // printf("uh_sport: %u\n", udp_header->uh_sport);
+    // printf("uh_dport: %u\n", udp_header->uh_dport);
+    // printf("uh_len: %u\n", udp_header->uh_len);
+    // printf("uh_sum: %u\n", udp_header->uh_sum);
+    // printf("\n==================================\n");
+    // printf("\n\n");
 
-    fprintf(logFile,"\n=============UDPHDR===============\n");
-    fprintf(logFile,"uh_sport: %u\n", udp_header->uh_sport);
-    fprintf(logFile,"uh_dport: %u\n", udp_header->uh_dport);
-    fprintf(logFile,"uh_len: %u\n", udp_header->uh_len);
-    fprintf(logFile,"uh_sum: %u\n", udp_header->uh_sum);
-    fprintf(logFile,"\n==================================\n");
-    fprintf(logFile,"\n\n");
+    // fprintf(logFile,"\n=============UDPHDR===============\n");
+    // fprintf(logFile,"uh_sport: %u\n", udp_header->uh_sport);
+    // fprintf(logFile,"uh_dport: %u\n", udp_header->uh_dport);
+    // fprintf(logFile,"uh_len: %u\n", udp_header->uh_len);
+    // fprintf(logFile,"uh_sum: %u\n", udp_header->uh_sum);
+    // fprintf(logFile,"\n==================================\n");
+    // fprintf(logFile,"\n\n");
+    
 
 }
 
@@ -287,7 +291,7 @@ int main() {
 
     char errbuf[PCAP_ERRBUF_SIZE];
     
-    // Set the network interface you want to capture on
+    // Set the network interface
     char *dev = pcap_lookupdev(errbuf);
     printf("target dev: %s\n", dev);
 
@@ -321,6 +325,6 @@ int main() {
     printf("before loop\n");
     pcap_loop(handle, 0, packet_handler, NULL);
     printf("after loop\n");
-    // pcap_close(handle);
+    pcap_close(handle);
     return 0;
 }
