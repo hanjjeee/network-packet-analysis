@@ -14,8 +14,7 @@ struct ethhdr {
 
 // IP Header Structure
 struct iphdr {
-    uint8_t ip_hl;          // Version and Header Length
-    uint8_t ip_ver;         // ipv4 , ipv6
+    uint8_t ip_ver_hl;          // Version and Header Length
     uint8_t ip_tos;         // Type of Service
     uint16_t ip_len;        // Total Length
     uint16_t ip_id;         // Identification
@@ -198,8 +197,8 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
 
     // IP
     printf("\n=============IPHDR===============\n");
-    printf("ip_hl: %u\n", ip_header->ip_hl);
-    printf("ip_ver: %u\n", ip_header->ip_ver);
+    printf("ip_ver: %u\n", ip_header->ip_ver_hl >> 4);
+    printf("ip_hl: %u\n", ip_header->ip_ver_hl & 0xff);
     printf("ip_tos: %u\n", ip_header->ip_tos);
     printf("ip_len: %u\n", ip_header->ip_len);
     printf("ip_id: %u\n", ip_header->ip_id);
@@ -213,8 +212,8 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
     printf("\n\n");
 
     fprintf(logFile,"\n=============IPHDR===============\n");
-    fprintf(logFile,"ip_hl: %u\n", ip_header->ip_hl);
-    fprintf(logFile,"ip_ver: %u\n", ip_header->ip_ver);
+    fprintf(logFile,"ip_ver: %u\n", ip_header->ip_ver_hl >> 4);
+    fprintf(logFile,"ip_hl: %u\n", ip_header->ip_ver_hl & 0xff);
     fprintf(logFile,"ip_tos: %u\n", ip_header->ip_tos);
     fprintf(logFile,"ip_len: %u\n", ip_header->ip_len);
     fprintf(logFile,"ip_id: %u\n", ip_header->ip_id);
