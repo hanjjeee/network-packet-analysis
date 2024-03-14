@@ -1,12 +1,12 @@
-#include <winsock2.h>  // 필요한 헤더 추가
+#include <winsock2.h> 
 #include <stdio.h>
 #include <pcap.h>
 
 // Ethernet Header Structure
 struct ethhdr {
-    u_char des[6];//수신자 MAC 주소
-	u_char src[6];//송신자 MAC 주소
-	short int ptype;//뒤에 나올 패킷의 프로토콜 종류(예:ARP/IP/RARP)
+    u_char des[6];
+	u_char src[6];
+	short int ptype;
 	//IP 헤더가 오는 경우 : 0x0800
 	//ARP 헤더가 오는 경우 : 0x0806
 	//RARP 헤더가 오는 경우 : 0x0835
@@ -54,9 +54,8 @@ FILE *logFile = NULL;
 
 char* getIpFormat(uint32_t ip_address){
 
-     static char ip_string[16]; // IPv4 주소 문자열은 최대 15글자 (xxx.xxx.xxx.xxx) + null 문자('\0')
+     static char ip_string[16];
 
-    // 32비트 주소를 4개의 옥텟으로 나누어서 문자열로 변환
     sprintf(ip_string, "%u.%u.%u.%u",
         (ip_address >> 24) & 0xFF, // 첫 번째 옥텟
         (ip_address >> 16) & 0xFF, // 두 번째 옥텟
@@ -129,10 +128,6 @@ char* getIPHdrProtocol(uint8_t ip_p){
 
     return protocol;
 }
-
-// u_char *user_data: 사용자 정의 데이터로, pcap_loop 함수에서 전달한 사용자 데이터입니다. 이 예시에서는 사용하지 않으므로 무시
-// pcap_pkrhdr *pkthdr:  패킷의 헤더 정보를 담고 있는 구조체입니다. 이 구조체에는 캡처된 패킷의 길이, 타임스탬프 등의 정보가 포함
-// u_char *packet: 캡처된 패킷의 실제 데이터
 
 void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
     // Print the entire packet (customize this part based on your needs)
