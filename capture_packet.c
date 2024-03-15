@@ -198,7 +198,7 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
     // IP
     printf("\n=============IPHDR===============\n");
     printf("ip_ver: %u\n", ip_header->ip_ver_hl >> 4);
-    printf("ip_hl: %u\n", ip_header->ip_ver_hl & 0xff);
+    printf("ip_hl: %u\n", ip_header->ip_ver_hl & 0b1111);
     printf("ip_tos: %u\n", ip_header->ip_tos);
     printf("ip_len: %u\n", ip_header->ip_len);
     printf("ip_id: %u\n", ip_header->ip_id);
@@ -213,7 +213,7 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
 
     fprintf(logFile,"\n=============IPHDR===============\n");
     fprintf(logFile,"ip_ver: %u\n", ip_header->ip_ver_hl >> 4);
-    fprintf(logFile,"ip_hl: %u\n", ip_header->ip_ver_hl & 0xff);
+    fprintf(logFile,"ip_hl: %u\n", ip_header->ip_ver_hl & 0b1111);
     fprintf(logFile,"ip_tos: %u\n", ip_header->ip_tos);
     fprintf(logFile,"ip_len: %u\n", ip_header->ip_len);
     fprintf(logFile,"ip_id: %u\n", ip_header->ip_id);
