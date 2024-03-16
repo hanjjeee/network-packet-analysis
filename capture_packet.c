@@ -112,13 +112,14 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *packet_header, 
 
 char* getIpFormat(uint32_t ip_address){
 
-     static char ip_string[16];
+    static char ip_string[16];
 
+    // 옥텟 순서 뒤집혀서 맞게 출력되도록 수정.. 
     sprintf(ip_string, "%u.%u.%u.%u",
-        (ip_address >> 24) & 0xFF, // 첫 번째 옥텟
-        (ip_address >> 16) & 0xFF, // 두 번째 옥텟
-        (ip_address >> 8) & 0xFF,  // 세 번째 옥텟
-        ip_address & 0xFF);        // 네 번째 옥텟
+        (ip_address) & 0xFF, // 첫 번째 옥텟
+        (ip_address >> 8) & 0xFF, // 두 번째 옥텟
+        (ip_address >> 16) & 0xFF,  // 세 번째 옥텟
+        ( ip_address >> 24) & 0xFF);        // 네 번째 옥텟
 
     return ip_string;
 
