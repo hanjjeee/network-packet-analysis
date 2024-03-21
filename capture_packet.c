@@ -1,7 +1,11 @@
 // #include <winsock2.h> 
 #include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <curl/curl.h>
 #include <pcap.h>
 
+#define MAX_TIME_STRING_LENGTH 30
 #define HDR 3592
 #define ETHHDR 0
 #define IPHDR 1
@@ -80,6 +84,8 @@ void printHdr(int type);
 char* getETHHdrProtocol(short int type);
 char* getIPHdrProtocol(uint8_t ip_p);
 char* getIpFormat(uint32_t ip_address);
+int requestApi(char* ip);
+char* getDate();
 
 void packet_handler(u_char *user_data, const struct pcap_pkthdr *packet_header, const u_char *packet_data) {
 
@@ -266,6 +272,7 @@ void printHdr(int type){
             break;
             
         case IPHDR :
+      
             // IP
             printf("\n=============IPHDR===============\n");
             printf("ip_ver: %u\n", ip_header->ip_ver_hl >> 4);
@@ -296,6 +303,9 @@ void printHdr(int type){
             fprintf(logFile,"ip_dst: %s\n", getIpFormat(ip_header->ip_dst));
             fprintf(logFile,"\n==================================\n");
             fprintf(logFile,"\n\n");
+
+            requestApi(getIpFormat(ip_header->ip_dst));
+
             break;
 
         case TCPHDR :
@@ -365,7 +375,8 @@ int main() {
     char *dev = pcap_lookupdev(errbuf);
     printf("target dev: %s\n", dev);
 
-    pcap_t *handle = pcap_open_live(dev, BUFSIZ, 0, 1000, errbuf);
+    // BUFSIZ
+    pcap_t *handle = pcap_open_live(dev, BUFSIZ, 0, 10000, errbuf);
     printf("handle: %p\n", (void *)handle);
 
     if (handle == NULL) {
@@ -398,3 +409,69 @@ int main() {
     pcap_close(handle);
     return 0;
 }
+
+// 콜백 함수 선언
+size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
+    // 서버로부터의 응답을 여기서 처리
+    return size * nmemb;
+}
+
+
+int requestApi(char* ip) {
+    
+    const char* chart_server_ws = "http://localhost:3000/api";
+
+    CURL *curl;
+    CURLcode res;
+ 
+    /* In windows, this inits the winsock stuff */
+    curl_global_init(CURL_GLOBAL_ALL);
+    
+    /* get a curl handle */
+    curl = curl_easy_init();
+
+    if(curl) {
+        /* First set the URL that is about to receive our POST. This URL can
+        just as well be an https:// URL if that is what should receive the
+        data. */
+        curl_easy_setopt(curl, CURLOPT_URL, chart_server_ws);
+
+        /* Now specify the POST data */
+        char post_data[1000];
+        
+        sprintf(post_data, "time=%s&ip=%s", getDate(), ip);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
+    
+        /* Perform the request, res gets the return code */
+        res = curl_easy_perform(curl);
+        /* Check for errors */
+        if(res != CURLE_OK)
+        printf("curl_easy_perform() failed: %s\n",
+                curl_easy_strerror(res));
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+                curl_easy_strerror(res));
+    
+        /* always cleanup */
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+    return 0;
+
+}
+
+char* getDate() {
+    time_t timer = time(NULL);
+    struct tm *t = localtime(&timer);
+
+   if (t == NULL) {
+        perror("Failed to get local time");
+        return NULL;
+    }
+
+    // 시간을 형식화된 문자열로 변환
+    static char cur_date[MAX_TIME_STRING_LENGTH];
+    strftime(cur_date, MAX_TIME_STRING_LENGTH, "%Y-%m-%d %H:%M:%S", t);
+
+    return cur_date;
+}
+
